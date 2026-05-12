@@ -89,3 +89,34 @@ Dans tous les cas, le script:
 - verifie les cles attendues de `.env.example`
 - ecrit `.env.local` en mode restreint (`600`)
 - n'affiche pas les valeurs secretes
+
+## Integration Dashboard
+
+L'application `openweather` peut servir de source JSON pour `dashboard`.
+
+Variables a definir dans `.env.local` :
+
+```env
+API_KEY=
+OPENWEATHER_API_TOKEN=
+```
+
+Regles :
+
+- `API_KEY` est la cle fournisseur OpenWeather et reste uniquement cote `openweather` ;
+- `OPENWEATHER_API_TOKEN` sert a authentifier les appels backend du `dashboard` via l'en-tete `X-Internal-Api-Token` ;
+- le `dashboard` ne doit jamais stocker `API_KEY`.
+
+Endpoint expose pour le dashboard :
+
+```text
+GET /api/dashboard/weather/
+```
+
+Parametres optionnels :
+
+- `q`
+- `lat`
+- `lon`
+- `units`
+- `lang`

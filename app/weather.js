@@ -27,6 +27,7 @@ const {
   API_UNITS,
   CURRENT_BASE_URL,
   FORECAST_BASE_URL,
+  OPENWEATHER_API_TOKEN,
   PORT = 3000,
 } = process.env;
 const weatherApiKey = API_KEY || process.env.OPENWEATHER_API_KEY;
@@ -49,6 +50,20 @@ const buildWeatherUrl = (baseUrl, city) => {
   return `${baseUrl}?${params.toString()}`;
 };
 
+const buildWeatherUrlFromOptions = (baseUrl, options = {}) => {
+  const params = new URLSearchParams();
+  if (options.lat && options.lon) {
+    params.append('lat', options.lat);
+    params.append('lon', options.lon);
+  } else {
+    params.append('q', options.q || selectedCity);
+  }
+  if (options.lang || API_LANGUE) params.append('lang', options.lang || API_LANGUE);
+  if (options.units || API_UNITS) params.append('units', options.units || API_UNITS);
+  if (weatherApiKey) params.append('appid', weatherApiKey);
+  return `${baseUrl}?${params.toString()}`;
+};
+
 const fetchJSON = async (url) => {
   const response = await fetch(url);
   return response.json();
@@ -61,6 +76,60 @@ const viewModel = (page, data = []) => ({
   day: selectedDay,
   city: selectedCity,
 });
+
+const requireInternalApiToken = (req, res, next) => {
+  const configuredToken = String(OPENWEATHER_API_TOKEN || '').trim();
+  const providedToken = String(req.get('X-Internal-Api-Token') || '').trim();
+
+  if (!configuredToken) {
+    res.status(503).json({ detail: 'OPENWEATHER_API_TOKEN est manquant côté openweather.' });
+    return;
+  }
+
+  if (!providedToken || providedToken !== configuredToken) {
+    res.status(403).json({ detail: 'Accès météo dashboard non autorisé.' });
+    return;
+  }
+
+  next();
+};
+
+const normalizeWeatherPayload = (currentPayload, forecastPayload) => {
+  const cityName = String(currentPayload?.name || '').trim();
+  const countryCode = String(currentPayload?.sys?.country || '').trim();
+  const location = [cityName, countryCode].filter(Boolean).join(', ') || selectedCity;
+
+  return {
+    location,
+    current: {
+      temperature_c: currentPayload?.main?.temp ?? null,
+      condition: currentPayload?.weather?.[0]?.description || '',
+      icon: currentPayload?.weather?.[0]?.icon || '',
+    },
+    forecast: Array.isArray(forecastPayload?.list)
+      ? forecastPayload.list.slice(0, 8).map((item) => ({
+          starts_at: item?.dt_txt || '',
+          temperature_c: item?.main?.temp ?? null,
+          condition: item?.weather?.[0]?.description || '',
+          icon: item?.weather?.[0]?.icon || '',
+        }))
+      : [],
+  };
+};
+
+const fetchWeatherPayload = async (options = {}) => {
+  const urls = [
+    buildWeatherUrlFromOptions(CURRENT_BASE_URL, options),
+    buildWeatherUrlFromOptions(FORECAST_BASE_URL, options),
+  ];
+  const [currentPayload, forecastPayload] = await Promise.all(urls.map(fetchJSON));
+
+  if (!isSuccess(currentPayload) || !isSuccess(forecastPayload)) {
+    throw new Error('OpenWeather payload invalid');
+  }
+
+  return normalizeWeatherPayload(currentPayload, forecastPayload);
+};
 
 app.get('/', async (req, res) => {
   try {
@@ -88,6 +157,22 @@ app.get('/location', (req, res) => {
 });
 
 app.get("/healthz", (req, res) => res.status(200).send("ok"));
+
+app.get('/api/dashboard/weather/', requireInternalApiToken, async (req, res) => {
+  try {
+    const payload = await fetchWeatherPayload({
+      q: String(req.query.q || '').trim(),
+      lat: String(req.query.lat || '').trim(),
+      lon: String(req.query.lon || '').trim(),
+      units: String(req.query.units || '').trim(),
+      lang: String(req.query.lang || '').trim(),
+    });
+    res.json(payload);
+  } catch (error) {
+    console.error('Failed to fetch dashboard weather payload:', error);
+    res.status(502).json({ detail: 'Source météo indisponible.' });
+  }
+});
 
 
 app.post('/', (req, res) => {
