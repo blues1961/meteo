@@ -1,14 +1,50 @@
 # meteo
 
+## Démarrage standard
+
+Depuis la racine du projet :
+
+```bash
+make dev
+make init
+make up
+make ps
+make logs
+```
+
+Pour la production :
+
+```bash
+make prod
+make check
+make rebuild
+make up
+make ps
+```
+
+Séquence de mise à jour standard :
+
+```bash
+make prod
+make update
+```
+
+### Règles
+
+- `.env` doit être un lien symbolique vers `.env.dev` ou `.env.prod`
+- `.env.local` contient les secrets et ne doit jamais être commité
+- `make migrate` est un no-op pour cette application Node/Express
+- `make backup` est un no-op car le projet ne gère pas de base locale
+
 ## Conteneurisation
 
 ### Developpement (local)
 
 ```bash
-make env-link-dev
-make dev-up
-make dev-ps
-make dev-logs
+make dev
+make up
+make ps
+make logs
 ```
 
 Application: `http://localhost:3003` (ou la valeur `DEV_WEB_PORT` dans `.env.dev`).
@@ -16,11 +52,10 @@ Application: `http://localhost:3003` (ou la valeur `DEV_WEB_PORT` dans `.env.dev
 ### Production (Linode + Traefik)
 
 ```bash
-make env-link-prod
-make env-local-perms
-make prod-up
-make prod-ps
-make prod-logs
+make prod
+make up
+make ps
+make logs
 ```
 
 Mode attendu:
@@ -32,10 +67,12 @@ Mode attendu:
 
 Le fichier `.env.local` reste local et ne doit pas etre commit.
 
-### 1. Initialiser le template
+### 1. Initialiser l'identité du projet
 
 ```bash
-cp .env.example .env.local
+sed -n '1,40p' .env.template
+make dev
+make init
 ```
 
 ### 2. Recuperer les secrets depuis mdp.mon-site.ca
@@ -89,6 +126,12 @@ Dans tous les cas, le script:
 - verifie les cles attendues de `.env.example`
 - ecrit `.env.local` en mode restreint (`600`)
 - n'affiche pas les valeurs secretes
+
+Le token local `METEO_API_TOKEN` est généré automatiquement si nécessaire par :
+
+```bash
+./scripts/generate-secrets.sh
+```
 
 ## Integration Dashboard
 
