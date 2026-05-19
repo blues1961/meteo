@@ -1,4 +1,4 @@
-# openweather
+# meteo
 
 ## Conteneurisation
 
@@ -41,13 +41,13 @@ cp .env.example .env.local
 ### 2. Recuperer les secrets depuis mdp.mon-site.ca
 
 ```bash
-SECRETS_ACCESS_TOKEN="ton_token" npm --prefix app run secrets:pull -- --app openweather --env dev
+SECRETS_ACCESS_TOKEN="ton_token" npm --prefix app run secrets:pull -- --app meteo --env dev
 ```
 
 Si ton API retourne un payload chiffre (ex: `ciphertext`/`iv`/`tag`), ajoute:
 
 ```bash
-SECRETS_ENCRYPTION_KEY="ta_cle_locale" npm --prefix app run secrets:pull -- --app openweather --env dev
+SECRETS_ENCRYPTION_KEY="ta_cle_locale" npm --prefix app run secrets:pull -- --app meteo --env dev
 ```
 
 ### Variables supportees par pull-secrets
@@ -59,13 +59,13 @@ SECRETS_ENCRYPTION_KEY="ta_cle_locale" npm --prefix app run secrets:pull -- --ap
 - `SECRETS_ENCRYPTION_KEY` (si payload chiffre)
 - `SECRETS_OUTPUT_FILE` (defaut: `.env.local`)
 - `SECRETS_TEMPLATE_FILE` (defaut: `.env.example`)
-- `SECRETS_APP` (defaut: `openweather`)
+- `SECRETS_APP` (defaut: `meteo`)
 - `SECRETS_ENV` (defaut: `dev`)
 
 Tu peux aussi utiliser le wrapper:
 
 ```bash
-./scripts/pull-secrets.sh --app openweather --env dev
+./scripts/pull-secrets.sh --app meteo --env dev
 ```
 
 ### Format API attendu
@@ -92,19 +92,21 @@ Dans tous les cas, le script:
 
 ## Integration Dashboard
 
-L'application `openweather` peut servir de source JSON pour `dashboard`.
+L'application `meteo` peut servir de source JSON pour `dashboard`.
 
 Variables a definir dans `.env.local` :
 
 ```env
 API_KEY=
+METEO_API_TOKEN=
 OPENWEATHER_API_TOKEN=
 ```
 
 Regles :
 
-- `API_KEY` est la cle fournisseur OpenWeather et reste uniquement cote `openweather` ;
-- `OPENWEATHER_API_TOKEN` sert a authentifier les appels backend du `dashboard` via l'en-tete `X-Internal-Api-Token` ;
+- `API_KEY` est la cle fournisseur OpenWeather et reste uniquement cote `meteo` ;
+- `METEO_API_TOKEN` est le nom canonique du token inter-apps utilise pour authentifier les appels backend du `dashboard` via l'en-tete `X-Internal-Api-Token` ;
+- `OPENWEATHER_API_TOKEN` reste accepte temporairement comme alias de transition ;
 - le `dashboard` ne doit jamais stocker `API_KEY`.
 
 Endpoint expose pour le dashboard :

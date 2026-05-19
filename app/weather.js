@@ -27,10 +27,12 @@ const {
   API_UNITS,
   CURRENT_BASE_URL,
   FORECAST_BASE_URL,
+  METEO_API_TOKEN,
   OPENWEATHER_API_TOKEN,
   PORT = 3000,
 } = process.env;
 const weatherApiKey = API_KEY || process.env.OPENWEATHER_API_KEY;
+const internalApiToken = String(METEO_API_TOKEN || OPENWEATHER_API_TOKEN || '').trim();
 
 const app = express();
 app.use(express.static(path.join(__dirname, 'public')));
@@ -78,15 +80,14 @@ const viewModel = (page, data = []) => ({
 });
 
 const requireInternalApiToken = (req, res, next) => {
-  const configuredToken = String(OPENWEATHER_API_TOKEN || '').trim();
   const providedToken = String(req.get('X-Internal-Api-Token') || '').trim();
 
-  if (!configuredToken) {
-    res.status(503).json({ detail: 'OPENWEATHER_API_TOKEN est manquant côté openweather.' });
+  if (!internalApiToken) {
+    res.status(503).json({ detail: 'METEO_API_TOKEN est manquant côté meteo.' });
     return;
   }
 
-  if (!providedToken || providedToken !== configuredToken) {
+  if (!providedToken || providedToken !== internalApiToken) {
     res.status(403).json({ detail: 'Accès météo dashboard non autorisé.' });
     return;
   }

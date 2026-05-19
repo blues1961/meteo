@@ -139,7 +139,7 @@ async function main() {
     console.log('Usage: node scripts/pull-secrets.js [options]');
     console.log('');
     console.log('Options:');
-    console.log('  --app <name>            App name (default: openweather)');
+    console.log('  --app <name>            App name (default: meteo)');
     console.log('  --env <name>            Environment name (default: dev)');
     console.log('  --url <url>             Full API URL (overrides baseUrl+endpoint)');
     console.log('  --baseUrl <url>         Base URL (default: https://mdp.mon-site.ca)');
@@ -152,7 +152,7 @@ async function main() {
     return;
   }
 
-  const app = args.app || process.env.SECRETS_APP || 'openweather';
+  const app = args.app || process.env.SECRETS_APP || 'meteo';
   const envName = args.env || process.env.SECRETS_ENV || 'dev';
   const baseUrl = (args.baseUrl || process.env.SECRETS_BASE_URL || 'https://mdp.mon-site.ca').replace(/\/$/, '');
   const endpoint = args.endpoint || process.env.SECRETS_ENDPOINT || '/api/secrets';
