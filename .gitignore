@@ -11,3 +11,5 @@ testpromiseall.js
 test.log
 *.bak
 cookies*.txt
+
+.docforge/
